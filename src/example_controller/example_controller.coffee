@@ -92,6 +92,7 @@ module.controller "ExampleController", [
     $scope.windowWidth = angular.element($event.target).width()
 
   # Table
+
   $scope.macGyverSeasonOne = [
     {
       'No.': '1',
@@ -228,7 +229,25 @@ module.controller "ExampleController", [
     }
   ]
 
+  # Table Select Rows
+  $scope.selectedModels = []
+
+  $scope.unselectAll = ->
+    $scope.selectedModels = []
+
+  $scope.selectAll = ->
+    $scope.selectedModels = $scope.macGyverSeasonOne
+
+  $scope.selectRandom = ->
+    length = $scope.macGyverSeasonOne.length
+    models = []
+    for i in [1..(length / 2)]
+      index = Math.floor Math.random() * length
+      models.push $scope.macGyverSeasonOne[index]
+
+    $scope.selectedModels = _.unique models
 ]
+
 
 window.prettyPrint && prettyPrint()
 

@@ -3,10 +3,26 @@ extends layout
 block append content
   .row.content
     #example.span12(ng-controller='ExampleController')
+
       section#table-view
         h2 Example
         .docs-example
           h3 MacTable
+
+          ul.nav-pills.table-view-actions
+            li: a(href="", ng-click="selectAll()") Select All
+            li: a(href="", ng-click="unselectAll()") Unselect All
+            li: a(href="", ng-click="selectRandom()") Select Random
+
+          span You've selected
+          ul
+            li(ng-hide="selectedModels.length")
+              span No rows selected!
+            li(ng-repeat="model in selectedModels")
+              span {{model["Title"]}}
+
+          input(ng-model="query")
+
           table.table.mac-table-default(
             mac-table
             mac-table-columns="dynamic"
@@ -24,8 +40,14 @@ block append content
                 th(mac-cell-template="", mac-column-width="auto")
                   span {{cell.column.colName}}
 
-            tbody(mac-table-section="body", mac-table-section-models="macGyverSeasonOne")
+            tbody(
+              mac-table-section                 = "body"
+              mac-table-section-models          = "macGyverSeasonOne | filter: query"
+              mac-table-section-selected-models = "$parent.$parent.selectedModels"
+            )
               tr(mac-table-row)
+                td(mac-cell-template="No.", mac-table-selectable)
+                  span {{cell.value()}}
                 td(mac-cell-template="")
                   span {{cell.value()}}
 
