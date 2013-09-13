@@ -6480,7 +6480,7 @@ $.widget("ui.sortable", $.ui.mouse, {
 }(this, String);
 
 /*
- * jQuery File Upload Plugin 5.32.2
+ * jQuery File Upload Plugin 5.32.3
  * https://github.com/blueimp/jQuery-File-Upload
  *
  * Copyright 2010, Sebastian Tschan
@@ -6880,7 +6880,7 @@ $.widget("ui.sortable", $.ui.mouse, {
                 // Ignore non-multipart setting if not supported:
                 multipart = options.multipart || !$.support.xhrFileUpload,
                 paramName = options.paramName[0];
-            options.headers = options.headers || {};
+            options.headers = $.extend({}, options.headers);
             if (options.contentRange) {
                 options.headers['Content-Range'] = options.contentRange;
             }
@@ -7867,10 +7867,6 @@ angular.module("Mac").directive("macAutocomplete", [
         $menuScope = $rootScope.$new();
         $menuScope.items = [];
         $menuScope.index = 0;
-        $scope.$watch(attrs.ngModel, function(value) {
-          ctrl.$setViewValue(value);
-          return ctrl.$render();
-        });
         ctrl.$parsers.push(function(value) {
           if (value && !disabled($scope)) {
             if (delay > 0) {
@@ -8095,22 +8091,30 @@ angular.module("Mac").directive("macDatepicker", [
             }
             return inputElement.datepicker("option", name, value);
           };
-          $scope.$watch(attrs.macDatepickerModel, function(value) {
-            if (initialized && (value != null)) {
-              return $timeout(function() {
-                return inputElement.datepicker("setDate", value);
-              }, 0);
-            }
-          });
-          $scope.$watch(attrs.macDatepickerDefaultDate, function(value) {
-            return setOptions("defaultDate", value);
-          });
-          $scope.$watch(attrs.macDatepickerMaxDate, function(value) {
-            return setOptions("maxDate", value);
-          });
-          $scope.$watch(attrs.macDatepickerMinDate, function(value) {
-            return setOptions("minDate", value);
-          });
+          if (attrs.macDatepickerModel != null) {
+            $scope.$watch(attrs.macDatepickerModel, function(value) {
+              if (initialized && (value != null)) {
+                return $timeout(function() {
+                  return inputElement.datepicker("setDate", value);
+                }, 0, false);
+              }
+            });
+          }
+          if (attrs.macDatepickerDefaultDate != null) {
+            $scope.$watch(attrs.macDatepickerDefaultDate, function(value) {
+              return setOptions("defaultDate", value);
+            });
+          }
+          if (attrs.macDatepickerMaxDate != null) {
+            $scope.$watch(attrs.macDatepickerMaxDate, function(value) {
+              return setOptions("maxDate", value);
+            });
+          }
+          if (attrs.macDatepickerMinDate != null) {
+            $scope.$watch(attrs.macDatepickerMinDate, function(value) {
+              return setOptions("minDate", value);
+            });
+          }
           opts.onSelect = function(date, instance) {
             return $scope.$apply(function() {
               if (typeof onSelect === "function") {
@@ -8426,7 +8430,7 @@ angular.module("Mac").directive("macUpload", [
                 clearTimeout(dragoverTimeout);
               }
               return dropZone.removeClass("droppable");
-            }, 250);
+            }, 250, false);
           });
         }
         options.dropZone = dropZone || $();
@@ -9070,6 +9074,44 @@ angular.module("Mac").directive("macSpinner", function() {
             return $(".bar", element).css("background", value);
           }
         });
+      };
+    }
+  };
+});
+
+/*
+@chalk overview
+@name Stopwatch
+
+@description
+An interactive Stopwatch directive
+*/
+
+angular.module("Mac").filter("secondsAsTime", function() {
+  return function(seconds) {};
+});
+
+angular.module("Mac").directive("macStopwatch", function() {
+  return {
+    restrict: "E",
+    replace: true,
+    templateUrl: "template/stopwatch.html",
+    scope: {
+      value: "=",
+      startAvailable: "=",
+      stopAvailable: "=",
+      resetAvailable: "="
+    },
+    link: function($scope, element, attributes) {
+      $scope.stopwatch = new StopWatch();
+      $scope.onStart = function() {
+        return $scope.stopwatch.start();
+      };
+      $scope.onStop = function() {
+        return $scope.stopwatch.stop();
+      };
+      return $scope.onReset = function() {
+        return $scope.stopwatch.reset();
       };
     }
   };
@@ -9854,7 +9896,7 @@ angular.module("Mac").directive("macTagAutocomplete", [
         onKeydown: "&macTagAutocompleteOnKeydown"
       },
       compile: function(element, attrs) {
-        var attrEvent, attrsObject, delay, events, eventsList, item, labelKey, queryKey, tagLabelKey, textInput, valueKey, _i, _len, _ref;
+        var attrsObject, delay, labelKey, queryKey, tagLabelKey, textInput, valueKey;
         valueKey = attrs.macTagAutocompleteValue;
         if (valueKey == null) {
           valueKey = "id";
@@ -9865,23 +9907,9 @@ angular.module("Mac").directive("macTagAutocomplete", [
         }
         queryKey = attrs.macTagAutocompleteQuery || "q";
         delay = +attrs.macTagAutocompleteDelay || 800;
-        events = attrs.macTagAutocompleteEvents || "";
-        eventsList = [];
-        if (events) {
-          _ref = events.split(",");
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            item = _ref[_i];
-            attrEvent = util.capitalize(item);
-            eventsList.push({
-              name: item,
-              capitalized: attrEvent,
-              eventFn: attrs["macTagAutocompleteOn" + attrEvent]
-            });
-          }
-        }
         tagLabelKey = labelKey ? "." + labelKey : labelKey;
-        $(".tag-label", element).text("{{tag" + tagLabelKey + "}}");
-        textInput = $(".mac-autocomplete", element);
+        angular.element(".tag-label", element).attr("ng-bind", "tag" + tagLabelKey);
+        textInput = angular.element(".mac-autocomplete", element);
         attrsObject = {
           "mac-autocomplete-value": valueKey,
           "mac-autocomplete-label": labelKey,
@@ -9904,60 +9932,66 @@ angular.module("Mac").directive("macTagAutocomplete", [
               return $scope.textInput = value;
             });
           }
-          element.click(function() {
-            return $(".text-input", element).focus();
-          });
-          $scope.eventsList = eventsList;
-          $scope.$watch("eventsList", function(value) {
-            var event, _j, _len1, _results;
-            _results = [];
-            for (_j = 0, _len1 = eventsList.length; _j < _len1; _j++) {
-              event = eventsList[_j];
-              if (!(event.eventFn && event.name !== "keydown")) {
-                continue;
-              }
-              _results.push((function(event) {
-                return $(".text-input", element).on(event.name, function($event) {
-                  var expression;
-                  expression = $parse(event.eventFn);
-                  return $scope.$apply(function() {
-                    return expression($scope.$parent, {
-                      $event: $event,
-                      item: $scope.textInput
+          $scope.focusTextInput = function() {
+            return angular.element(".text-input", element).focus();
+          };
+          $timeout(function() {
+            var capitalized, eventFn, events, name, _i, _len, _ref, _results;
+            if ((events = attrs.macTagAutocompleteEvents)) {
+              _ref = events.split(",");
+              _results = [];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                name = _ref[_i];
+                capitalized = util.capitalize(name);
+                eventFn = attrs["macTagAutocompleteOn" + capitalized];
+                if (!(eventFn && name !== "keydown")) {
+                  continue;
+                }
+                _results.push((function(name, eventFn) {
+                  return angular.element(".text-input", element).on(name, function($event) {
+                    var expression;
+                    expression = $parse(eventFn);
+                    return $scope.$apply(function() {
+                      var item;
+                      item = $scope.textInput;
+                      return expression($scope.$parent, {
+                        $event: $event,
+                        item: item
+                      });
                     });
                   });
-                });
-              })(event));
+                })(name, eventFn));
+              }
+              return _results;
             }
-            return _results;
-          });
+          }, 0);
           $scope.$watch("selected.length", function(length) {
-            var difference, selectedValues, sourceValues;
+            var difference, item, selectedValues, sourceValues;
             sourceValues = (function() {
-              var _j, _len1, _ref1, _results;
-              _ref1 = $scope.source || [];
+              var _i, _len, _ref, _results;
+              _ref = $scope.source || [];
               _results = [];
-              for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-                item = _ref1[_j];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                item = _ref[_i];
                 _results.push(item[valueKey]);
               }
               return _results;
             })();
             selectedValues = (function() {
-              var _j, _len1, _ref1, _results;
-              _ref1 = $scope.selected || [];
+              var _i, _len, _ref, _results;
+              _ref = $scope.selected || [];
               _results = [];
-              for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-                item = _ref1[_j];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                item = _ref[_i];
                 _results.push(item[valueKey]);
               }
               return _results;
             })();
             difference = (function() {
-              var _j, _len1, _results;
+              var _i, _len, _results;
               _results = [];
-              for (_j = 0, _len1 = sourceValues.length; _j < _len1; _j++) {
-                item = sourceValues[_j];
+              for (_i = 0, _len = sourceValues.length; _i < _len; _i++) {
+                item = sourceValues[_i];
                 if (__indexOf.call(selectedValues, item) < 0) {
                   _results.push(item);
                 }
@@ -9965,12 +9999,12 @@ angular.module("Mac").directive("macTagAutocomplete", [
               return _results;
             })();
             return $scope.autocompleteSource = (function() {
-              var _j, _len1, _ref1, _ref2, _results;
-              _ref1 = $scope.source || [];
+              var _i, _len, _ref, _ref1, _results;
+              _ref = $scope.source || [];
               _results = [];
-              for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-                item = _ref1[_j];
-                if (_ref2 = item[valueKey], __indexOf.call(difference, _ref2) >= 0) {
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                item = _ref[_i];
+                if (_ref1 = item[valueKey], __indexOf.call(difference, _ref1) >= 0) {
                   _results.push(item);
                 }
               }
@@ -10004,24 +10038,24 @@ angular.module("Mac").directive("macTagAutocomplete", [
             return true;
           };
           $scope.onSuccess = function(data) {
-            var existingValues;
+            var existingValues, item;
             existingValues = (function() {
-              var _j, _len1, _ref1, _results;
-              _ref1 = $scope.selected || [];
+              var _i, _len, _ref, _results;
+              _ref = $scope.selected || [];
               _results = [];
-              for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-                item = _ref1[_j];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                item = _ref[_i];
                 _results.push(item[valueKey]);
               }
               return _results;
             })();
             return (function() {
-              var _j, _len1, _ref1, _ref2, _results;
-              _ref1 = data.data;
+              var _i, _len, _ref, _ref1, _results;
+              _ref = data.data;
               _results = [];
-              for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-                item = _ref1[_j];
-                if (_ref2 = item[valueKey] || item, __indexOf.call(existingValues, _ref2) < 0) {
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                item = _ref[_i];
+                if (_ref1 = item[valueKey] || item, __indexOf.call(existingValues, _ref1) < 0) {
                   _results.push(item);
                 }
               }
@@ -10038,13 +10072,13 @@ angular.module("Mac").directive("macTagAutocomplete", [
               $scope.selected.push(item);
             }
             return $timeout(function() {
-              return $scope.$apply(function() {
-                return $scope.textInput = "";
-              });
+              return $scope.textInput = "";
             }, 0);
           };
           return $scope.$on("mac-tag-autocomplete-clear-input", function() {
-            return $scope.textInput = "";
+            return $scope.$apply(function() {
+              return $scope.textInput = "";
+            });
           });
         };
       }
@@ -10122,11 +10156,11 @@ angular.module("Mac").directive("macTime", [
         };
         opts = util.extendAttributes("macTime", defaults, attrs);
         return function($scope, element, attrs) {
-          var highlighActions, inputDOM, inputSelectAction, prefix, time, timeRegex;
+          var highlightActions, inputDOM, inputSelectAction, prefix, time, timeRegex;
           $scope.placeholder = opts.placeholder;
           inputDOM = $("input", element)[0];
           timeRegex = /(\d+):(\d+) ([AP]M)/;
-          highlighActions = {
+          highlightActions = {
             hours: function() {
               return inputDOM.setSelectionRange(0, 2);
             },
@@ -10186,8 +10220,8 @@ angular.module("Mac").directive("macTime", [
             }
             $scope.model = $filter("date")($scope.time.getTime(), "hh:mm a");
             return $timeout(function() {
-              return inputSelectAction(start, end, highlighActions);
-            }, 0);
+              return inputSelectAction(start, end, highlightActions);
+            }, 0, false);
           };
           $scope.updateScopeTime = function() {
             var hours, markers, minutes, timeMatch;
@@ -10348,7 +10382,7 @@ angular.module("Mac").directive("macTooltip", [
           tooltip.removeClass("visible");
           return $timeout(function() {
             return tooltip.remove();
-          }, 100);
+          }, 100, false);
         };
         toggle = function(event) {
           if (tooltip != null) {
@@ -10377,9 +10411,11 @@ angular.module("Mac").directive("macTooltip", [
             }
           }
         });
-        scope.$watch(attrs.macTooltipDisabled, function(value) {
-          return disabled = value;
-        });
+        if (attrs.macTooltipDisabled != null) {
+          scope.$watch(attrs.macTooltipDisabled, function(value) {
+            return disabled = value;
+          });
+        }
         return scope.$on("$destroy", function() {
           if (tooltip != null) {
             return removeTip();
@@ -10406,7 +10442,7 @@ module.controller("modalController", [
 ]);
 
 module.controller("ExampleController", [
-  "$scope", "$timeout", "$window", function($scope, $timeout, $window) {
+  "$scope", "$window", function($scope, $window) {
     $scope.selectOptions = [
       {
         value: 1,
@@ -10734,6 +10770,28 @@ angular.module("Mac").filter("false", function() {
 
 /*
 @chalk overview
+@name List
+@description
+List filter. Use for converting arrays into a string
+
+@param {Array} list Array of items
+@param {String} separator String to separate each element of the array (default ,)
+@returns {String} Formatted string
+*/
+
+angular.module("Mac").filter("list", [
+  function() {
+    return function(list, separator) {
+      if (separator == null) {
+        separator = ", ";
+      }
+      return list.join(separator);
+    };
+  }
+]);
+
+/*
+@chalk overview
 @name Pluralize
 @description
 Pluralizes the given string. It's a simple proxy to the pluralize function on util.
@@ -10955,7 +11013,7 @@ angular.module("Mac").service("modal", [
             element.removeClass("hide");
             $timeout(function() {
               return element.addClass("visible");
-            }, 0);
+            }, 0, false);
             _this.opened = {
               id: id,
               element: element,
@@ -11047,7 +11105,7 @@ angular.module("Mac").service("modal", [
         element.removeClass("visible");
         $timeout(function() {
           return element.addClass("hide");
-        }, 250);
+        }, 250, false);
         this.bindingEvents("unbind");
         this.opened = null;
         if (options.moduleMethod) {

@@ -1,3 +1,6 @@
+# Webstorm Project Files
+.idea
+
 # Node packages
 node_modules
 
