@@ -4,6 +4,7 @@
     "tmp/jqueryui.js",
     "vendor/bower/underscore.string/lib/underscore.string.js",
     "vendor/bower/jquery-file-upload/js/jquery.fileupload.js",
+    "vendor/bower/stopwatchjs/stopwatch.js",
     "tmp/app/**/*.js"
   ],
   "full": [
@@ -11,6 +12,7 @@
     "tmp/jqueryui.js",
     "vendor/bower/underscore.string/lib/underscore.string.js",
     "vendor/bower/jquery-file-upload/js/jquery.fileupload.js",
+    "vendor/bower/stopwatchjs/stopwatch.js",
     "tmp/app/**/*.js",
     "!tmp/app/example_controller/*.js"
   ],

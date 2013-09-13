@@ -19,6 +19,7 @@
     "jquery": "~2.0.3",
     "angular-mocks": "1.0.7",
     "jquery-file-upload": "~8.8.2",
-    "jquery.ui": "~1.10.3"
+    "jquery.ui": "~1.10.3",
+    "stopwatchjs": "master"
   }
 }

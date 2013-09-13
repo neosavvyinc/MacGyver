@@ -1,5 +1,5 @@
 .mac-stopwatch
   span(ng-bind='stopwatch.value')
-    button(ng-click='onStart()', ng-show='startAvailable') Start
-    button(ng-click='onStop()', ng-show='stopAvailable') Stop
-    button(ng-click='onReset()', ng-show='resetAvailable') Reset
+  button.btn(ng-click='onStart()', ng-show='startAvailable') Start
+  button.btn(ng-click='onStop()', ng-show='stopAvailable') Stop
+  button.btn(ng-click='onReset()', ng-show='resetAvailable') Reset

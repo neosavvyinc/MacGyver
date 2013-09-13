@@ -17,15 +17,22 @@ angular.module("Mac").directive "macStopwatch", ->
   templateUrl: "template/stopwatch.html"
   scope:
     value: "="
-    startAvailable: "="
-    stopAvailable: "="
-    resetAvailable: "="
 
   link: ($scope, element, attributes) ->
-    $scope.stopwatch = new StopWatch()
+    $scope.stopwatch = new Stopwatch()
     $scope.onStart = () ->
       $scope.stopwatch.start()
     $scope.onStop = () ->
       $scope.stopwatch.stop()
     $scope.onReset = () ->
       $scope.stopwatch.reset()
+
+    attributes.$observe('startAvailable', (val) ->
+      $scope.startAvailable = (val != 'false' && val != "0");
+    )
+    attributes.$observe('stopAvailable', (val) ->
+      $scope.stopAvailable = (val != 'false' && val != "0");
+    )
+    attributes.$observe('resetAvailable', (val) ->
+      $scope.resetAvailable = (val != 'false' && val != "0");
+    )
